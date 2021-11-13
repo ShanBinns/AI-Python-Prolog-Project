@@ -17,15 +17,35 @@ prolog.consult("additional_symptoms.pl")
 prolog.consult("illnesses.pl")
 prolog.consult("patients.pl")
 
+def get_symptom_weight(symptom_name):
+    symptoms = []
+    for symptom in prolog.query("stakeholder_symptom(_, SYMPTOM, WEIGHT, PRESSURE_CHECK)"):
+        if(symptom["SYMPTOM"] == symptom_name):
+            return symptom["WEIGHT"]
+    for symptom in prolog.query("additional_symptom(_, SYMPTOM, WEIGHT, PRESSURE_CHECK)"):
+        if(symptom["SYMPTOM"] == symptom_name):
+            return symptom["WEIGHT"]
+    return None
+
 def get_risk(variant,symptoms_array):
     count = 0
     weight = 0
     total_weight = 0
-    for symptom in prolog.query("symptom(%s, SYMPTOM, WEIGHT, PRESSURE_CHECK)" %(variant)):
+
+    for symptom in prolog.query("stakeholder_symptom(%s, SYMPTOM, WEIGHT, PRESSURE_CHECK)" %(variant)):
         total_weight = total_weight + symptom["WEIGHT"]
         if(symptoms_array.count(symptom["SYMPTOM"])):
-            weight = weight + symptom["WEIGHT"]
+            weight = weight + int(symptom["WEIGHT"])
         count = count + 1
+
+    for symptom in prolog.query("additional_symptom(%s, SYMPTOM, WEIGHT, PRESSURE_CHECK)" %(variant)):
+        total_weight = total_weight + symptom["WEIGHT"]
+        if(symptoms_array.count(symptom["SYMPTOM"])):
+            weight = weight + int(symptom["WEIGHT"])
+        count = count + 1
+
+    if(total_weight == 0):
+        total_weight = 1
     risk = (weight / total_weight) * 100
     return risk
 
@@ -38,6 +58,20 @@ def get_symptoms():
         if(not(symptoms.count(symptom["SYMPTOM"]))):
             symptoms.append(symptom["SYMPTOM"])
     return symptoms
+
+def get_patient_diagnostic(name):
+    symptoms = get_symptoms()
+    diagnostic = ""
+    patient_symptoms = []
+    for symptom in symptoms:
+        for symp in prolog.query("is_a_patient_symptom(%s,%s)" %(name, symptom)):
+            patient_symptoms.append(symptom)
+
+    gen_risk = get_risk('normal',patient_symptoms)
+    mu_risk = get_risk('mu',patient_symptoms)
+    delta_risk = get_risk('delta',patient_symptoms)
+    diagnostic = "GENERAL VARIANT RISK: %{gen_risk}\n MU VARIANT RISK: %{mu_risk}\n DELTA VARIANT RISK: %{delta_risk}".format(gen_risk=gen_risk,mu_risk=mu_risk,delta_risk=delta_risk)
+    return diagnostic
 
 def get_illnesses():
     illnesses = []
@@ -352,7 +386,7 @@ class MainWindow:
                 chosen_symptoms.append(symptom[1])
         
         add_patient_to_file(name, age, temperature, bloodpressure, chosen_illnesses, chosen_symptoms)
-
+        tkinter.messagebox.showinfo("%s's Diagnosis"%(name), str(get_patient_diagnostic(name)))
 
     # functions for add fact buttons
     def add_covid_fact(self):
