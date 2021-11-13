@@ -59,7 +59,7 @@ def add_patient_to_file(name, age, temperature, bloodpressure, illnesses, sympto
 
 def add_symptom_to_file(variant,symptom,weight,bloodpressure_check):
     symptom_prolog_file = open("additional_symptoms.pl","a+")
-    symptom_prolog_file.write("symptom(%s, %s, %i, %i).\n" %(variant, symptom, weight, bloodpressure_check.get()))
+    symptom_prolog_file.write("additional_symptom(%s, %s, %i, %i).\n" %(variant, symptom, weight, bloodpressure_check.get()))
     symptom_prolog_file.close()
     tkinter.messagebox.showinfo("Symptom Added To Database", "New Symptom Fact has been added")
 
