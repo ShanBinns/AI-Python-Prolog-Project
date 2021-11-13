@@ -16,8 +16,7 @@ prolog.consult("diagnosis.pl")
 
 def add_symptom_to_file(variant,symptom,weight,bloodpressure_check):
     symptom_prolog_file = open("additional_symptoms.pl","a+")
-    now = datetime.datetime.now()
-    symptom_prolog_file.write("symptom(\"%s\", %s, %s, %i, %i).\n" %(now, variant, symptom, weight, bloodpressure_check.get()))
+    symptom_prolog_file.write("symptom(%s, %s, %i, %i).\n" %(variant, symptom, weight, bloodpressure_check.get()))
     symptom_prolog_file.close()
     tkinter.messagebox.showinfo("Symptom Added To File", "New Symptom Fact has been added")
 
