@@ -10,15 +10,58 @@ from tkinter import messagebox
 
 # view statistical data
 
-
 prolog = Prolog()
 prolog.consult("diagnosis.pl")
+prolog.consult("stakeholders.pl")
+prolog.consult("additional_symptoms.pl")
+prolog.consult("illnesses.pl")
+prolog.consult("patients.pl")
+
+def get_risk(variant,symptoms_array):
+    count = 0
+    weight = 0
+    total_weight = 0
+    for symptom in prolog.query("symptom(%s, SYMPTOM, WEIGHT, PRESSURE_CHECK)" %(variant)):
+        total_weight = total_weight + symptom["WEIGHT"]
+        if(symptoms_array.count(symptom["SYMPTOM"])):
+            weight = weight + symptom["WEIGHT"]
+        count = count + 1
+    risk = (weight / total_weight) * 100
+    return risk
+
+def get_symptoms():
+    symptoms = []
+    for symptom in prolog.query("stakeholder_symptom(_, SYMPTOM, WEIGHT, PRESSURE_CHECK)"):
+        if(not(symptoms.count(symptom["SYMPTOM"]))):
+            symptoms.append(symptom["SYMPTOM"])
+    for symptom in prolog.query("additional_symptom(_, SYMPTOM, WEIGHT, PRESSURE_CHECK)"):
+        if(not(symptoms.count(symptom["SYMPTOM"]))):
+            symptoms.append(symptom["SYMPTOM"])
+    return symptoms
+
+def get_illnesses():
+    illnesses = []
+    for illness in prolog.query("illness(_, ILLNESS, WEIGHT, PRESSURE_CHECK)"):
+        if(not(illnesses.count(illness["ILLNESS"]))):
+            illnesses.append(illness["ILLNESS"])
+    return illnesses
+
+def add_patient_to_file(name, age, temperature, bloodpressure, illnesses, symptoms):
+    patientsProlog = open("patients.pl","a+")
+    now = datetime.datetime.now()
+    bloodpressure_string = str(bloodpressure)
+    temperature_string = str(temperature)
+    symptoms_string = str(symptoms)
+    illnesses_string = str(illnesses)
+    patientsProlog.write("patient(\"%s\", %s, %i, %s, %s, %s, %s).\n" %(now, name, age, temperature_string, bloodpressure_string, illnesses_string, symptoms_string))
+    patientsProlog.close()
+    tkinter.messagebox.showinfo("Patient Added To File", "New Patient Has Been Added")
 
 def add_symptom_to_file(variant,symptom,weight,bloodpressure_check):
     symptom_prolog_file = open("additional_symptoms.pl","a+")
     symptom_prolog_file.write("symptom(%s, %s, %i, %i).\n" %(variant, symptom, weight, bloodpressure_check.get()))
     symptom_prolog_file.close()
-    tkinter.messagebox.showinfo("Symptom Added To File", "New Symptom Fact has been added")
+    tkinter.messagebox.showinfo("Symptom Added To Database", "New Symptom Fact has been added")
 
 class add_covid_fact:
     def __init__(self, root):
@@ -220,46 +263,24 @@ class MainWindow:
         self.temp = Entry(detail_frame, bd=3, width=10)
         self.temp.place(x=200, y=130)
 
-        # Checkbox Variables
-        self.var_check1 = IntVar()
-        self.var_check2 = IntVar()
-        self.var_check3 = IntVar()
-        self.var_check4 = IntVar()
-        self.var_check5 = IntVar()
-        self.var_check6 = IntVar()
-        self.var_check7 = IntVar()
-        self.var_check8 = IntVar()
+        illnesses = get_illnesses()
+        self.illnessCheckBoxValues = []
+        for illness in illnesses:
+            self.illnessCheckBoxValues.append(IntVar())
 
-        self.lbl = Label(detail_frame, text="Select all underlying illnesses that applies patient.", fg="blue",
-                         font=("times new Roman", 12, "bold"))
+        self.lbl = Label(detail_frame, text="Select all underlying illnesses that applies patient.", fg="blue", font=("times new Roman", 12, "bold"))
         self.lbl.place(x=10, y=200)
-
-        Checkbutton(detail_frame, text="Heart Disease", variable=self.var_check1, onvalue=1, offvalue=0).place(x=10,
-                                                                                                               y=240)
-        Checkbutton(detail_frame, text="Lung Conditions (including severe asthma,pneumonia,Cystic fibrosis)",
-                    variable=self.var_check2, onvalue=1, offvalue=0).place(x=10, y=260)
-        Checkbutton(detail_frame, text="Weakened Immune System (including Organ transplants, HIV/AIDs,",
-                    variable=self.var_check3, onvalue=1, offvalue=0).place(x=10, y=280)
-        Checkbutton(detail_frame, text="Diabetes", variable=self.var_check4, onvalue=1, offvalue=0).place(x=10, y=300)
-        Checkbutton(detail_frame, text="Hypertension", variable=self.var_check5, onvalue=1, offvalue=0).place(x=10,
-                                                                                                              y=320)
-        Checkbutton(detail_frame, text="Chronic kidney or liver disease", variable=self.var_check6, onvalue=1,
-                    offvalue=0).place(x=10, y=340)
-        Checkbutton(detail_frame, text="Down Syndrome", variable=self.var_check7, onvalue=1, offvalue=0).place(x=10,
-                                                                                                               y=360)
-        Checkbutton(detail_frame, text="Obesity", variable=self.var_check8, onvalue=1, offvalue=0).place(x=10, y=380)
+        position_x = 10
+        position_y = 240
+        for illness in enumerate(illnesses):
+            Checkbutton(detail_frame, text=illness[1], variable=self.illnessCheckBoxValues[illness[0]], onvalue=1, offvalue=0).place(x=position_x,y=position_y)
+            position_y = position_y + 20
 
         # List to save checkbox responses
         self.List = []
         self.varList = []
-        self.varList.append(self.var_check1)
-        self.varList.append(self.var_check2)
-        self.varList.append(self.var_check3)
-        self.varList.append(self.var_check4)
-        self.varList.append(self.var_check5)
-        self.varList.append(self.var_check6)
-        self.varList.append(self.var_check7)
-        self.varList.append(self.var_check8)
+        for illness in enumerate(illnesses):
+            self.varList.append(illness)
 
         # Patient history frame
         history_frame = Frame(root, bd=4, relief=RIDGE)
@@ -274,51 +295,34 @@ class MainWindow:
         self.lbl.place(x=10, y=50)
 
         # RadioButton Variables
-        self.vardiz = IntVar()
-        self.varfai = IntVar()
-        self.varvis = IntVar()
-        self.var_cough = IntVar()
-        self.varsho = IntVar()
+        symptoms = get_symptoms()
+        self.symptomCheckBoxValues = []
+        for symptom in symptoms:
+            self.symptomCheckBoxValues.append(IntVar())
 
-        self.lbl = Label(history_frame, text="Dizziness:", font=("times new Roman", 12))
-        self.lbl.place(x=10, y=90)
-        Radiobutton(history_frame, text="yes", variable=self.vardiz, value=1).place(x=200, y=90)
-        Radiobutton(history_frame, text="no", variable=self.vardiz, value=0).place(x=270, y=90)
-
-        self.lbl = Label(history_frame, text="Fainting:", font=("times new Roman", 12))
-        self.lbl.place(x=10, y=120)
-        Radiobutton(history_frame, text="yes", variable=self.varfai, value=1).place(x=200, y=120)
-        Radiobutton(history_frame, text="no", variable=self.varfai, value=0).place(x=270, y=120)
-
-        self.lbl = Label(history_frame, text="Blurred Vision:", font=("times new Roman", 12))
-        self.lbl.place(x=10, y=150)
-        Radiobutton(history_frame, text="yes", variable=self.varvis, value=1).place(x=200, y=150)
-        Radiobutton(history_frame, text="no", variable=self.varvis, value=0).place(x=270, y=150)
-
-        self.lbl = Label(history_frame, text="Cough:", font=("times new Roman", 12))
-        self.lbl.place(x=10, y=180)
-        Radiobutton(history_frame, text="yes", variable=self.var_cough, value=1).place(x=200, y=180)
-        Radiobutton(history_frame, text="no", variable=self.var_cough, value=0).place(x=270, y=180)
-
-        self.lbl = Label(history_frame, text="Shortness of Breath:", font=("times new Roman", 12))
-        self.lbl.place(x=10, y=210)
-        Radiobutton(history_frame, text="yes", variable=self.varsho, value=1).place(x=200, y=210)
-        Radiobutton(history_frame, text="no", variable=self.varsho, value=0).place(x=270, y=210)
+        position_x = 10
+        position_y = 90
+        for symptom in enumerate(symptoms):
+            self.lbl = Label(history_frame, text=symptom[1]+":", font=("times new Roman", 12))
+            self.lbl.place(x=10, y=position_y)
+            Radiobutton(history_frame, text="yes", variable=self.symptomCheckBoxValues[symptom[0]], value=1).place(x=200, y=position_y)
+            Radiobutton(history_frame, text="no", variable=self.symptomCheckBoxValues[symptom[0]], value=0).place(x=270, y=position_y)
+            position_y = position_y + 30
 
         # Blood Pressure
         self.lbl = Label(history_frame, text="Please enter blood pressure reading", fg="blue",
                          font=("times new Roman", 12, "bold"))
-        self.lbl.place(x=10, y=250)
+        self.lbl.place(x=10, y=340)
 
         self.lbl2 = Label(history_frame, text="Systolic:", font=("times new Roman", 12))
-        self.lbl2.place(x=10, y=280)
+        self.lbl2.place(x=10, y=370)
         self.systolic = Entry(history_frame, bd=3, width=10)
-        self.systolic.place(x=200, y=280)
+        self.systolic.place(x=200, y=370)
 
         self.lbl2 = Label(history_frame, text="Diastolic:", font=("times new Roman", 12))
-        self.lbl2.place(x=10, y=310)
+        self.lbl2.place(x=10, y=400)
         self.diastolic = Entry(history_frame, bd=3, width=10)
-        self.diastolic.place(x=200, y=310)
+        self.diastolic.place(x=200, y=400)
 
         # Submit button
         self.submitBtn = Button(root, text="Diagnose Patient", borderwidth=3, relief="sunken", command=self.submit,
@@ -327,43 +331,27 @@ class MainWindow:
 
     # Function that queries prolog file
     def submit(self):
-        name_var = self.name.get()
-        temp_var = float(self.temp.get())
-        age_var = int(self.age.get())
-
-        history_var = IntVar()
-
-        dizzy_choice = int(self.vardiz.get())
-        faint_choice = int(self.varfai.get())
-        vision_choice = int(self.varvis.get())
-        cough_choice = int(self.var_cough.get())
-        shortbreath_choice = int(self.varsho.get())
-
+        name = self.name.get()
+        age = int(self.age.get())
+        temperature = float(self.temp.get())
+        
         systolic_var = int(self.systolic.get())
         diastolic_var = int(self.diastolic.get())
+        bloodpressure = [diastolic_var, systolic_var]
 
-        # Checkbox
-        def isChecked():
-            global List
-
-            List = []
-            for item in self.varList:
-                if item.get() != "":
-                    List.append(item.get())
-
-        isChecked()
-        # print(List)
-        if 1 in List:
-            history_var = 1
-        else:
-            history_var = 0
-
-        result = list(prolog.query("get_symptom(%s,%f,%d,%d,%d,%d,%d,%d,%d,%d,%d)."
-                                   % (
-                                       name_var, temp_var, age_var, dizzy_choice, faint_choice, vision_choice,
-                                       cough_choice, shortbreath_choice, history_var, systolic_var, diastolic_var)))
-        tkinter.messagebox.showinfo("Completed", "Patient information Submitted")
-
+        illnesses = get_illnesses()
+        chosen_illnesses = []
+        for illness in enumerate(illnesses):
+            if(self.illnessCheckBoxValues[illness[0]].get()):
+                chosen_illnesses.append(illness[1])
+        
+        symptoms = get_symptoms()
+        chosen_symptoms = []
+        for symptom in enumerate(symptoms):
+            if(self.symptomCheckBoxValues[symptom[0]].get()):
+                chosen_symptoms.append(symptom[1])
+        
+        add_patient_to_file(name, age, temperature, bloodpressure, chosen_illnesses, chosen_symptoms)
 
 
     # functions for add fact buttons
