@@ -1,5 +1,5 @@
 import tkinter
-
+import datetime
 from pyswip import Prolog
 from tkinter import *
 from tkinter import ttk
@@ -14,6 +14,12 @@ from tkinter import messagebox
 prolog = Prolog()
 prolog.consult("diagnosis.pl")
 
+def add_symptom_to_file(variant,symptom,weight,bloodpressure_check):
+    symptom_prolog_file = open("additional_symptoms.pl","a+")
+    now = datetime.datetime.now()
+    symptom_prolog_file.write("symptom(\"%s\", %s, %s, %i, %i).\n" %(now, variant, symptom, weight, bloodpressure_check.get()))
+    symptom_prolog_file.close()
+    tkinter.messagebox.showinfo("Symptom Added To File", "New Symptom Fact has been added")
 
 class add_covid_fact:
     def __init__(self, root):
@@ -23,56 +29,115 @@ class add_covid_fact:
                               bg="gold", fg="blue")
         self.lbl_head.pack(side=TOP, fill=X)
 
-        self.covid_factLabel = Label(root, text="Enter Covid-19 Fact:", fg="blue", font=("times new Roman", 14, "bold"))
-        self.covid_factLabel.place(x=10, y=100)
-        self.covid_factEntry = Entry(root, bd=3, width=30)
-        self.covid_factEntry.place(x=210, y=100)
+        self.covid_symptomNameLabel = Label(root, text="Enter Covid-19 Symptom (eg. runny_nose):", fg="blue", font=("times new Roman", 12, "bold"))
+        self.covid_symptomNameLabel.place(x=10, y=100)
+        self.covid_symptomNameEntry = Entry(root, bd=3, width=20)
+        self.covid_symptomNameEntry.place(x=320, y=100)
 
-        # Submit Covid fact button
-        self.covid_factBtn = Button(root, text="Submit Fact", borderwidth=3, relief="sunken", command=(),
-                                    width=15, height=2, bg="gold", fg="medium blue",
-                                    font=("times new Roman", 10, "bold"))
+        self.covid_symptomWeightLabel = Label(root, text="Enter Fact Weight (eg. 10):", fg="blue", font=("times new Roman", 12, "bold"))
+        self.covid_symptomWeightLabel.place(x=10, y=140)
+        self.covid_symptomWeightEntry = Entry(root, bd=3, width=20)
+        self.covid_symptomWeightEntry.place(x=320, y=140)
+        self.requires_bloodpressure_check = BooleanVar()
+        self.covid_factBtn = Button(
+            root, 
+            text="Submit Fact", 
+            borderwidth=3, 
+            relief="sunken", 
+            command=(lambda: add_symptom_to_file("normal",self.covid_symptomNameEntry.get().replace(" ","_").lower(),int(self.covid_symptomWeightEntry.get()),self.requires_bloodpressure_check)),
+            width=15, 
+            height=2, 
+            bg="gold",
+            fg="medium blue",
+            font=("times new Roman", 10, "bold")
+        )
         self.covid_factBtn.place(x=250, y=200)
-
+        checkButton = Checkbutton(
+            root, 
+            text="Requires Bloodpressure Check", 
+            variable=self.requires_bloodpressure_check, 
+            onvalue=1, 
+            offvalue=0
+        ).place(x=320,y=160)
 
 class add_mu_fact:
     def __init__(self, root):
         self.root = root
-        self.lbl_head = Label(root, text="Add Knowledge about the Mu Variant", bd=5, relief=GROOVE,
+        self.lbl_head = Label(root, text="Add Knowledge about the Mu Covid-19 variant", bd=5, relief=GROOVE,
                               font=("times new Roman", 20, "bold"),
                               bg="gold", fg="blue")
         self.lbl_head.pack(side=TOP, fill=X)
 
-        self.mu_factLabel = Label(root, text="Enter Mu Variant Fact:", fg="blue", font=("times new Roman", 14, "bold"))
-        self.mu_factLabel.place(x=10, y=100)
-        self.mu_factEntry = Entry(root, bd=3, width=30)
-        self.mu_factEntry.place(x=250, y=100)
+        self.covid_symptomNameLabel = Label(root, text="Enter Covid-19 Symptom (eg. runny_nose):", fg="blue", font=("times new Roman", 12, "bold"))
+        self.covid_symptomNameLabel.place(x=10, y=100)
+        self.covid_symptomNameEntry = Entry(root, bd=3, width=20)
+        self.covid_symptomNameEntry.place(x=320, y=100)
 
-        # Submit Covid fact button
-        self.mu_factBtn = Button(root, text="Submit Fact", borderwidth=3, relief="sunken", command=(),
-                                 width=15, height=2, bg="gold", fg="medium blue", font=("times new Roman", 10, "bold"))
-        self.mu_factBtn.place(x=250, y=200)
+        self.covid_symptomWeightLabel = Label(root, text="Enter Fact Weight (eg. 10):", fg="blue", font=("times new Roman", 12, "bold"))
+        self.covid_symptomWeightLabel.place(x=10, y=140)
+        self.covid_symptomWeightEntry = Entry(root, bd=3, width=20)
+        self.covid_symptomWeightEntry.place(x=320, y=140)
+        self.covid_factBtn = Button(
+            root, 
+            text="Submit Fact", 
+            borderwidth=3, 
+            relief="sunken", 
+            command=(lambda: add_symptom_to_file("mu",self.covid_symptomNameEntry.get().replace(" ","_").lower(),int(self.covid_symptomWeightEntry.get()),self.requires_bloodpressure_check)),
+            width=15, 
+            height=2, 
+            bg="gold",
+            fg="medium blue",
+            font=("times new Roman", 10, "bold")
+        )
+        self.covid_factBtn.place(x=250, y=200)
+        self.requires_bloodpressure_check = BooleanVar()
+        Checkbutton(
+            root, 
+            text="Requires Bloodpressure Check", 
+            variable=self.requires_bloodpressure_check, 
+            onvalue=1, 
+            offvalue=0
+        ).place(x=320,y=160)
 
 
 class add_delta_fact:
     def __init__(self, root):
         self.root = root
-        self.lbl_head = Label(root, text="Add Knowledge about the Delta Variant", bd=5, relief=GROOVE,
+        self.lbl_head = Label(root, text="Add Knowledge about the Delta Covid-19 variant", bd=5, relief=GROOVE,
                               font=("times new Roman", 20, "bold"),
                               bg="gold", fg="blue")
         self.lbl_head.pack(side=TOP, fill=X)
 
-        self.mu_factLabel = Label(root, text="Enter Delta Variant Fact:", fg="blue",
-                                  font=("times new Roman", 14, "bold"))
-        self.mu_factLabel.place(x=10, y=100)
-        self.mu_factEntry = Entry(root, bd=3, width=30)
-        self.mu_factEntry.place(x=250, y=100)
+        self.covid_symptomNameLabel = Label(root, text="Enter Covid-19 Symptom (eg. runny_nose):", fg="blue", font=("times new Roman", 12, "bold"))
+        self.covid_symptomNameLabel.place(x=10, y=100)
+        self.covid_symptomNameEntry = Entry(root, bd=3, width=20)
+        self.covid_symptomNameEntry.place(x=320, y=100)
 
-        # Submit Covid fact button
-        self.mu_factBtn = Button(root, text="Submit Fact", borderwidth=3, relief="sunken", command=(),
-                                 width=15, height=2, bg="gold", fg="medium blue",
-                                 font=("times new Roman", 10, "bold"))
-        self.mu_factBtn.place(x=250, y=200)
+        self.covid_symptomWeightLabel = Label(root, text="Enter Fact Weight (eg. 10):", fg="blue", font=("times new Roman", 12, "bold"))
+        self.covid_symptomWeightLabel.place(x=10, y=140)
+        self.covid_symptomWeightEntry = Entry(root, bd=3, width=20)
+        self.covid_symptomWeightEntry.place(x=320, y=140)
+        self.covid_factBtn = Button(
+            root, 
+            text="Submit Fact", 
+            borderwidth=3, 
+            relief="sunken", 
+            command=(lambda: add_symptom_to_file("delta",self.covid_symptomNameEntry.get().replace(" ","_").lower(),int(self.covid_symptomWeightEntry.get()),self.requires_bloodpressure_check)),
+            width=15, 
+            height=2, 
+            bg="gold",
+            fg="medium blue",
+            font=("times new Roman", 10, "bold")
+        )
+        self.covid_factBtn.place(x=250, y=200)
+        self.requires_bloodpressure_check = BooleanVar()
+        Checkbutton(
+            root, 
+            text="Requires Bloodpressure Check", 
+            variable=self.requires_bloodpressure_check, 
+            onvalue=1, 
+            offvalue=0
+        ).place(x=320,y=160)
 
 
 class statistics:
