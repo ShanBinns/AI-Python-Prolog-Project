@@ -1,5 +1,13 @@
 /*get_symptom(timothy,40.0,70,1,1,0,0,0,1,135,80).     get_symptom(sara,25.0,70,0,0,0,0,0,0,135,80). */
+list_member(X,[X|_]).
+list_member(X,[_|TAIL]) :- list_member(X,TAIL).
 
+symptoms_of_patient(PATIENT,SYMPTOMS) :-
+	patient(_, PATIENT, _, _, _, _, SYMPTOMS).
+
+is_a_patient_symptom(PATIENT,SYMPTOM) :-
+	symptoms_of_patient(PATIENT,SYMPTOMS),
+	list_member(SYMPTOM, SYMPTOMS).
 
 
 get_symptom(Name,Temp,Age,Dizziness,Fainting,Vision,Coughing,Short_Breath,History,Systolic,Diastolic):-
