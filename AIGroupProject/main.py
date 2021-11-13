@@ -1,3 +1,5 @@
+import tkinter
+
 from pyswip import Prolog
 from tkinter import *
 from tkinter import ttk
@@ -5,12 +7,8 @@ from tkinter import messagebox
 
 # pip install pyswip
 
-# https://www.bma.org.uk/media/3820/bma-covid-19-risk-assessment-tool-february-2021.pdf
-# https://alama.org.uk/covid-19-medical-risk-assessment/
 
-# Fix Prolog file
-
-# Open other windows
+# view statistical data
 
 
 prolog = Prolog()
@@ -25,14 +23,15 @@ class add_covid_fact:
                               bg="gold", fg="blue")
         self.lbl_head.pack(side=TOP, fill=X)
 
-        self.covid_factLabel = Label(root, text="Enter Covid-19 Fact:", fg="blue",font=("times new Roman", 14, "bold"))
+        self.covid_factLabel = Label(root, text="Enter Covid-19 Fact:", fg="blue", font=("times new Roman", 14, "bold"))
         self.covid_factLabel.place(x=10, y=100)
         self.covid_factEntry = Entry(root, bd=3, width=30)
         self.covid_factEntry.place(x=210, y=100)
 
-        #Submit Covid fact button
+        # Submit Covid fact button
         self.covid_factBtn = Button(root, text="Submit Fact", borderwidth=3, relief="sunken", command=(),
-                                width=15, height=2, bg="gold", fg="medium blue", font=("times new Roman", 10, "bold"))
+                                    width=15, height=2, bg="gold", fg="medium blue",
+                                    font=("times new Roman", 10, "bold"))
         self.covid_factBtn.place(x=250, y=200)
 
 
@@ -44,15 +43,60 @@ class add_mu_fact:
                               bg="gold", fg="blue")
         self.lbl_head.pack(side=TOP, fill=X)
 
-        self.mu_factLabel = Label(root, text="Enter Mu Variant Fact:", fg="blue",font=("times new Roman", 14, "bold"))
+        self.mu_factLabel = Label(root, text="Enter Mu Variant Fact:", fg="blue", font=("times new Roman", 14, "bold"))
         self.mu_factLabel.place(x=10, y=100)
         self.mu_factEntry = Entry(root, bd=3, width=30)
         self.mu_factEntry.place(x=250, y=100)
 
-        #Submit Covid fact button
+        # Submit Covid fact button
         self.mu_factBtn = Button(root, text="Submit Fact", borderwidth=3, relief="sunken", command=(),
-                                width=15, height=2, bg="gold", fg="medium blue", font=("times new Roman", 10, "bold"))
+                                 width=15, height=2, bg="gold", fg="medium blue", font=("times new Roman", 10, "bold"))
         self.mu_factBtn.place(x=250, y=200)
+
+
+class add_delta_fact:
+    def __init__(self, root):
+        self.root = root
+        self.lbl_head = Label(root, text="Add Knowledge about the Delta Variant", bd=5, relief=GROOVE,
+                              font=("times new Roman", 20, "bold"),
+                              bg="gold", fg="blue")
+        self.lbl_head.pack(side=TOP, fill=X)
+
+        self.mu_factLabel = Label(root, text="Enter Delta Variant Fact:", fg="blue",
+                                  font=("times new Roman", 14, "bold"))
+        self.mu_factLabel.place(x=10, y=100)
+        self.mu_factEntry = Entry(root, bd=3, width=30)
+        self.mu_factEntry.place(x=250, y=100)
+
+        # Submit Covid fact button
+        self.mu_factBtn = Button(root, text="Submit Fact", borderwidth=3, relief="sunken", command=(),
+                                 width=15, height=2, bg="gold", fg="medium blue",
+                                 font=("times new Roman", 10, "bold"))
+        self.mu_factBtn.place(x=250, y=200)
+
+
+class statistics:
+    def __init__(self, root):
+        self.root = root
+        self.lbl_head = Label(root, text="MOH Covid-19 Statistical Data", bd=5, relief=GROOVE,
+                              font=("times new Roman", 20, "bold"),bg="gold", fg="blue")
+        self.lbl_head.pack(side=TOP, fill=X)
+
+        self.statsLabel = Label(root, text="Below are the data from all patients:", fg="blue",
+                                  font=("times new Roman", 14, "bold"))
+        self.statsLabel.place(x=10, y=100)
+
+        self.stats_data = Text(root,width=70,height=10, font=("", 10))
+        self.stats_data.place(x=20, y=150)
+
+        #Reads the stats from the text file, displaying data
+        file = open("files.txt", "r")
+        data = file.read()
+        self.mild_occurence = data.count("mild")
+        print("The number of patients with mild symptoms is", self.mild_occurence)
+
+        self.stats_data.insert(END, "The number of patients with mild symptoms is", self.mild_occurence)
+
 
 # Main window
 class MainWindow:
@@ -67,16 +111,23 @@ class MainWindow:
 
         # Add Fact Buttons
         self.covidFactBtn = Button(self.root, text="Add Covid-19 Fact", width=20, height=2, command=self.add_covid_fact,
-                                   bg="medium blue", fg="gold", font=("times new Roman", 12, "bold"))
-        self.covidFactBtn.place(x=300, y=80)
+                                   bg="medium blue", fg="gold", font=("times new Roman", 13, "bold"))
+        self.covidFactBtn.place(x=10, y=80)
 
         self.muFactBtn = Button(self.root, text="Add Mu Variant Fact", width=20, height=2, command=self.add_mu_fact,
-                                bg="medium blue", fg="gold", font=("times new Roman", 12, "bold"))
-        self.muFactBtn.place(x=600, y=80)
+                                bg="medium blue", fg="gold", font=("times new Roman", 13, "bold"))
+        self.muFactBtn.place(x=300, y=80)
 
-        self.deltaFactBtn = Button(self.root, text="Add Delta Variant Fact", width=20, height=2, command=print(),
-                                   bg="medium blue", fg="gold", font=("times new Roman", 12, "bold"))
-        self.deltaFactBtn.place(x=900, y=80)
+        self.deltaFactBtn = Button(self.root, text="Add Delta Variant Fact", width=20, height=2,
+                                   command=self.add_delta_fact,
+                                   bg="medium blue", fg="gold", font=("times new Roman", 13, "bold"))
+        self.deltaFactBtn.place(x=600, y=80)
+
+        self.statisticsBtn = Button(self.root, text="View Statistics", width=20, height=2,
+                                   command=self.statistics,
+                                   bg="medium blue", fg="gold", font=("times new Roman", 13, "bold"))
+        self.statisticsBtn.place(x=900, y=80)
+
 
         self.lbl1 = Label(self.root, text="Use the quick link buttons to add facts or fill out the form below to "
                                           "diagnosis patient", fg="blue", font=("times new Roman", 14, "bold"))
@@ -162,7 +213,7 @@ class MainWindow:
         self.vardiz = IntVar()
         self.varfai = IntVar()
         self.varvis = IntVar()
-        self.varcou = IntVar()
+        self.var_cough = IntVar()
         self.varsho = IntVar()
 
         self.lbl = Label(history_frame, text="Dizziness:", font=("times new Roman", 12))
@@ -182,8 +233,8 @@ class MainWindow:
 
         self.lbl = Label(history_frame, text="Cough:", font=("times new Roman", 12))
         self.lbl.place(x=10, y=180)
-        Radiobutton(history_frame, text="yes", variable=self.varcou, value=1).place(x=200, y=180)
-        Radiobutton(history_frame, text="no", variable=self.varcou, value=0).place(x=270, y=180)
+        Radiobutton(history_frame, text="yes", variable=self.var_cough, value=1).place(x=200, y=180)
+        Radiobutton(history_frame, text="no", variable=self.var_cough, value=0).place(x=270, y=180)
 
         self.lbl = Label(history_frame, text="Shortness of Breath:", font=("times new Roman", 12))
         self.lbl.place(x=10, y=210)
@@ -221,13 +272,11 @@ class MainWindow:
         dizzy_choice = int(self.vardiz.get())
         faint_choice = int(self.varfai.get())
         vision_choice = int(self.varvis.get())
-        cough_choice = int(self.varcou.get())
+        cough_choice = int(self.var_cough.get())
         shortbreath_choice = int(self.varsho.get())
 
         systolic_var = int(self.systolic.get())
         diastolic_var = int(self.diastolic.get())
-        print(systolic_var)
-        print(diastolic_var)
 
         # Checkbox
         def isChecked():
@@ -249,11 +298,11 @@ class MainWindow:
                                    % (
                                        name_var, temp_var, age_var, dizzy_choice, faint_choice, vision_choice,
                                        cough_choice, shortbreath_choice, history_var, systolic_var, diastolic_var)))
+        tkinter.messagebox.showinfo("Completed", "Patient information Submitted")
 
-        # write the result to file in prolog, then read from file to messagebox
-        # tkinter.messagebox.showinfo("Your results", result)
 
-    #functions for add fact buttons
+
+    # functions for add fact buttons
     def add_covid_fact(self):
         covid_fact = Tk()
         cfact = add_covid_fact(covid_fact)
@@ -268,9 +317,20 @@ class MainWindow:
         mu_fact.geometry("600x400+10+10")
         mu_fact.mainloop()
 
+    def add_delta_fact(self):
+        delta_fact = Tk()
+        dfact = add_delta_fact(delta_fact)
+        delta_fact.title("Add Delta Variant Fact")
+        delta_fact.geometry("600x400+10+10")
+        delta_fact.mainloop()
+
+    def statistics(self):
+        stats = Tk()
+        s = statistics(stats)
+        stats.title("View Statistics")
+        stats.geometry("600x400+10+10")
+        stats.mainloop()
 
 root = Tk()
 ob = MainWindow(root)
 root.mainloop()
-
-

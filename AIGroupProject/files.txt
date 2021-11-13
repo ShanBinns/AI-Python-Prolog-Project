@@ -1,0 +1,8 @@
+
+ Name:shan Age:18 Temperature:86.0 Dizziness:no Faintness:no BlurredVision:no Coughing:no ShortnessOfBreath:no UnderlyingIllness:no BloodPressure:Hypertension Severity:mild Riskvalue:2
+ Name:shan Age:18 Temperature:104.0 Dizziness:no Faintness:yes BlurredVision:yes Coughing:no ShortnessOfBreath:yes UnderlyingIllness:yes BloodPressure:Hypertension Severity:severe Riskvalue:9
+ Name:shan Age:70 Temperature:104.0 Dizziness:yes Faintness:no BlurredVision:yes Coughing:no ShortnessOfBreath:no UnderlyingIllness:yes BloodPressure:Hypertension Severity:severe Riskvalue:9
+ Name:shan Age:23 Temperature:104.0 Dizziness:yes Faintness:no BlurredVision:no Coughing:no ShortnessOfBreath:yes UnderlyingIllness:yes BloodPressure:Hypertension Severity:severe Riskvalue:8
+
+ Name:patrick Age:90 Temperature:86.0 Dizziness:no Faintness:yes BlurredVision:no Coughing:no ShortnessOfBreath:no UnderlyingIllness:yes BloodPressure:Hypertension Severity:severe Riskvalue:7
+ Name:shan Age:26 Temperature:68.0 Dizziness:no Faintness:no BlurredVision:no Coughing:no ShortnessOfBreath:no UnderlyingIllness:no BloodPressure:Hypertension Severity:mild Riskvalue:2
