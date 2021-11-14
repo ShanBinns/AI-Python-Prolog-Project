@@ -7,9 +7,16 @@ from tkinter import messagebox
 
 # pip install pyswip
 
-
+#touch necessary files
+f = open("diagnosis.pl","a")
+f.close()
+f = open("stakeholders.pl","a")
+f.close()
+f = open("additional_symptoms.pl","a")
+f.close()
+f = open("patients.pl","a")
+f.close()
 # view statistical data
-
 prolog = Prolog()
 prolog.consult("diagnosis.pl")
 prolog.consult("stakeholders.pl")
@@ -47,7 +54,7 @@ def get_risk(variant,symptoms_array):
     if(total_weight == 0):
         total_weight = 1
     risk = (weight / total_weight) * 100
-    return risk
+    return '%.2f' % risk
 
 def get_symptoms():
     symptoms = []
@@ -60,6 +67,7 @@ def get_symptoms():
     return symptoms
 
 def get_patient_diagnostic(name):
+    prolog.consult("diagnosis.pl")
     symptoms = get_symptoms()
     diagnostic = ""
     patient_symptoms = []
@@ -70,7 +78,7 @@ def get_patient_diagnostic(name):
     gen_risk = get_risk('normal',patient_symptoms)
     mu_risk = get_risk('mu',patient_symptoms)
     delta_risk = get_risk('delta',patient_symptoms)
-    diagnostic = "GENERAL VARIANT RISK: %{gen_risk}\n MU VARIANT RISK: %{mu_risk}\n DELTA VARIANT RISK: %{delta_risk}".format(gen_risk=gen_risk,mu_risk=mu_risk,delta_risk=delta_risk)
+    diagnostic = "GENERAL VARIANT RISK: %{gen_risk}\nMU VARIANT RISK: %{mu_risk}\nDELTA VARIANT RISK: %{delta_risk}".format(gen_risk=gen_risk,mu_risk=mu_risk,delta_risk=delta_risk)
     return diagnostic
 
 def get_illnesses():
@@ -386,7 +394,9 @@ class MainWindow:
                 chosen_symptoms.append(symptom[1])
         
         add_patient_to_file(name, age, temperature, bloodpressure, chosen_illnesses, chosen_symptoms)
+        prolog.consult("patients.pl")
         tkinter.messagebox.showinfo("%s's Diagnosis"%(name), str(get_patient_diagnostic(name)))
+        print(str(get_patient_diagnostic(name)))
 
     # functions for add fact buttons
     def add_covid_fact(self):
