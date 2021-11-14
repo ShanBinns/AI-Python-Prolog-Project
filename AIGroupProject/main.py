@@ -1,5 +1,6 @@
 import tkinter
 import datetime
+import os
 from pyswip import Prolog
 from tkinter import *
 from tkinter import ttk
@@ -16,6 +17,7 @@ f = open("additional_symptoms.pl","a")
 f.close()
 f = open("patients.pl","a")
 f.close()
+
 # view statistical data
 prolog = Prolog()
 prolog.consult("diagnosis.pl")
@@ -29,9 +31,10 @@ def get_symptom_weight(symptom_name):
     for symptom in prolog.query("stakeholder_symptom(_, SYMPTOM, WEIGHT, PRESSURE_CHECK)"):
         if(symptom["SYMPTOM"] == symptom_name):
             return symptom["WEIGHT"]
-    for symptom in prolog.query("additional_symptom(_, SYMPTOM, WEIGHT, PRESSURE_CHECK)"):
-        if(symptom["SYMPTOM"] == symptom_name):
-            return symptom["WEIGHT"]
+    if(os.stat("additional_symptoms.pl").st_size):
+        for symptom in prolog.query("additional_symptom(_, SYMPTOM, WEIGHT, PRESSURE_CHECK)"):
+            if(symptom["SYMPTOM"] == symptom_name):
+                return symptom["WEIGHT"]
     return None
 
 def get_risk(variant,symptoms_array):
@@ -45,11 +48,12 @@ def get_risk(variant,symptoms_array):
             weight = weight + int(symptom["WEIGHT"])
         count = count + 1
 
-    for symptom in prolog.query("additional_symptom(%s, SYMPTOM, WEIGHT, PRESSURE_CHECK)" %(variant)):
-        total_weight = total_weight + symptom["WEIGHT"]
-        if(symptoms_array.count(symptom["SYMPTOM"])):
-            weight = weight + int(symptom["WEIGHT"])
-        count = count + 1
+    if(os.stat("additional_symptoms.pl").st_size):
+        for symptom in prolog.query("additional_symptom(%s, SYMPTOM, WEIGHT, PRESSURE_CHECK)" %(variant)):
+            total_weight = total_weight + symptom["WEIGHT"]
+            if(symptoms_array.count(symptom["SYMPTOM"])):
+                weight = weight + int(symptom["WEIGHT"])
+            count = count + 1
 
     if(total_weight == 0):
         total_weight = 1
@@ -61,9 +65,10 @@ def get_symptoms():
     for symptom in prolog.query("stakeholder_symptom(_, SYMPTOM, WEIGHT, PRESSURE_CHECK)"):
         if(not(symptoms.count(symptom["SYMPTOM"]))):
             symptoms.append(symptom["SYMPTOM"])
-    for symptom in prolog.query("additional_symptom(_, SYMPTOM, WEIGHT, PRESSURE_CHECK)"):
-        if(not(symptoms.count(symptom["SYMPTOM"]))):
-            symptoms.append(symptom["SYMPTOM"])
+    if(os.stat("additional_symptoms.pl").st_size):
+        for symptom in prolog.query("additional_symptom(_, SYMPTOM, WEIGHT, PRESSURE_CHECK)"):
+            if(not(symptoms.count(symptom["SYMPTOM"]))):
+                symptoms.append(symptom["SYMPTOM"])
     return symptoms
 
 def get_patient_diagnostic(name):
@@ -396,7 +401,6 @@ class MainWindow:
         add_patient_to_file(name, age, temperature, bloodpressure, chosen_illnesses, chosen_symptoms)
         prolog.consult("patients.pl")
         tkinter.messagebox.showinfo("%s's Diagnosis"%(name), str(get_patient_diagnostic(name)))
-        print(str(get_patient_diagnostic(name)))
 
     # functions for add fact buttons
     def add_covid_fact(self):
