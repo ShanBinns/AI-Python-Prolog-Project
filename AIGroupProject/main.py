@@ -37,10 +37,16 @@ def get_symptom_weight(symptom_name):
                 return symptom["WEIGHT"]
     return None
 
+def name_to_lowercase_snake_case(name):
+    return name.lower().replace(" ","_")
+
+def name_to_titlecase_from_snake_case(name):
+    return name.replace("_"," ").title()
+
 def statistical_information():
     statistics = ""
     patients = []
-    for p in prolog.query("patient(DATE, NAME, AGE, TEMPERATURE, BLOOD_PRESSURE, ILLNESSES, SYMPTOMS)"):
+    for p in prolog.query("patient(DATE, NAME, AGE, TEMPERATURE, BLOOD_PRESSURE, ILLNESSES, SYMPTOMS, MILD_SEVERE)"):
         patient = {}
         patient['DATE'] = p["DATE"]
         patient['NAME'] = p["NAME"]
@@ -48,6 +54,7 @@ def statistical_information():
         patient['TEMPERATURE'] = p["TEMPERATURE"]
         patient['ILLNESSES'] = p["ILLNESSES"]
         patient['SYMPTOMS'] = p["SYMPTOMS"]
+        patient['MILD_SEVERE'] = p["MILD_SEVERE"]
         patients.append(patient)
 
     statistics = statistics + "Patients Per Day:\n"
@@ -58,7 +65,7 @@ def statistical_information():
 
 def patients_per_day():
     patients = []
-    for p in prolog.query("patient(DATE, NAME, AGE, TEMPERATURE, BLOOD_PRESSURE, ILLNESSES, SYMPTOMS)"):
+    for p in prolog.query("patient(DATE, NAME, AGE, TEMPERATURE, BLOOD_PRESSURE, ILLNESSES, SYMPTOMS, MILD_SEVERE)"):
         patient = {}
         patient['DATE'] = bytes.decode(p["DATE"])
         patient['NAME'] = p["NAME"]
@@ -66,6 +73,7 @@ def patients_per_day():
         patient['TEMPERATURE'] = p["TEMPERATURE"]
         patient['ILLNESSES'] = p["ILLNESSES"]
         patient['SYMPTOMS'] = p["SYMPTOMS"]
+        patient['MILD_SEVERE'] = p["MILD_SEVERE"]
         patients.append(patient)
 
     days = [patients[0]["DATE"]]
@@ -96,7 +104,7 @@ def is_same_date(dt1, dt2):
 
 def get_patient_names():
     names = []
-    for patient in prolog.query("patient(DATE, NAME, AGE, TEMPERATURE, BLOOD_PRESSURE, ILLNESSES, SYMPTOMS)"):
+    for patient in prolog.query("patient(DATE, NAME, AGE, TEMPERATURE, BLOOD_PRESSURE, ILLNESSES, SYMPTOMS, MILD_SEVERE)"):
         names.append(patient["NAME"])
     return names
 
@@ -156,14 +164,14 @@ def get_illnesses():
             illnesses.append(illness["ILLNESS"])
     return illnesses
 
-def add_patient_to_file(name, age, temperature, bloodpressure, illnesses, symptoms):
+def add_patient_to_file(name, age, temperature, bloodpressure, illnesses, symptoms, mild_severe):
     patientsProlog = open("patients.pl","a+")
     now = datetime.datetime.now()
     bloodpressure_string = str(bloodpressure)
     temperature_string = str(temperature)
     symptoms_string = str(symptoms)
     illnesses_string = str(illnesses)
-    patientsProlog.write("patient(\"%s\", %s, %i, %s, %s, %s, %s).\n" %(now, name, age, temperature_string, bloodpressure_string, illnesses_string, symptoms_string))
+    patientsProlog.write("patient(\"%s\", %s, %i, %s, %s, %s, %s, %s).\n" %(now, name, age, temperature_string, bloodpressure_string, illnesses_string, symptoms_string, mild_severe))
     patientsProlog.close()
     tkinter.messagebox.showinfo("Patient Added To File", "New Patient Has Been Added")
 
@@ -452,11 +460,14 @@ class MainWindow:
 
     # Function that queries prolog file
     def submit(self):
-        # A Guard that protects the system from entering the same patient twice
-        if(get_patient_names().count(self.name.get())):
-            tkinter.messagebox.showwarning("That Patient already exists"%(self.name.get()), "%s Is Already a Patient in the system"%(self.name.get()))
-            return None
-        name = self.name.get()
+
+        # Checking if the patient file has content before reading it
+        if(os.stat("patients.pl").st_size):
+            # A Guard that protects the system from entering the same patient twice
+            if(get_patient_names().count(self.name.get())):
+                tkinter.messagebox.showwarning("That Patient already exists"%(self.name.get()), "%s Is Already a Patient in the system"%(self.name.get()))
+                return None
+        name = name_to_lowercase_snake_case(self.name.get())
         age = int(self.age.get())
         temperature = float(self.temp.get())
         
@@ -476,9 +487,9 @@ class MainWindow:
             if(self.symptomCheckBoxValues[symptom[0]].get()):
                 chosen_symptoms.append(symptom[1])
         
-        add_patient_to_file(name, age, temperature, bloodpressure, chosen_illnesses, chosen_symptoms)
+        add_patient_to_file(name, age, temperature, bloodpressure, chosen_illnesses, chosen_symptoms, self.mild_severe_case.get())
         prolog.consult("patients.pl")
-        tkinter.messagebox.showinfo("%s's Diagnosis"%(name), str(get_patient_diagnostic(name)))
+        tkinter.messagebox.showinfo("%s's Diagnosis"%(name_to_titlecase_from_snake_case(name)), str(get_patient_diagnostic(name)))
 
     # functions for add fact buttons
     def add_covid_fact(self):

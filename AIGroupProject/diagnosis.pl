@@ -3,7 +3,7 @@ list_member(X,[X|_]).
 list_member(X,[_|TAIL]) :- list_member(X,TAIL).
 
 symptoms_of_patient(PATIENT,SYMPTOMS) :-
-	patient(_, PATIENT, _, _, _, _, SYMPTOMS).
+	patient(_, PATIENT, _, _, _, _, SYMPTOMS, _).
 
 is_a_patient_symptom(PATIENT,SYMPTOM) :-
 	symptoms_of_patient(PATIENT,SYMPTOMS),
