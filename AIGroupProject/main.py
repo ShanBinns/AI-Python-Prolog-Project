@@ -190,7 +190,8 @@ class add_covid_fact:
         self.covid_symptomWeightLabel.place(x=10, y=140)
         self.covid_symptomWeightEntry = Entry(root, bd=3, width=20)
         self.covid_symptomWeightEntry.place(x=320, y=140)
-        self.requires_bloodpressure_check = BooleanVar()
+        self.requires_bloodpressure_check = IntVar()
+        self.requires_bloodpressure_check.set(0)
         self.covid_factBtn = Button(
             root, 
             text="Submit Fact", 
@@ -205,8 +206,9 @@ class add_covid_fact:
         )
         self.covid_factBtn.place(x=250, y=200)
         checkButton = Checkbutton(
-            root, 
+            root,
             text="Requires Bloodpressure Check", 
+            command=(lambda: self.requires_bloodpressure_check.set(not(self.requires_bloodpressure_check.get())) ),
             variable=self.requires_bloodpressure_check, 
             onvalue=1, 
             offvalue=0
@@ -246,6 +248,7 @@ class add_mu_fact:
         Checkbutton(
             root, 
             text="Requires Bloodpressure Check", 
+            command=(lambda: self.requires_bloodpressure_check.set(not(self.requires_bloodpressure_check.get())) ),
             variable=self.requires_bloodpressure_check, 
             onvalue=1, 
             offvalue=0
@@ -286,6 +289,7 @@ class add_delta_fact:
         Checkbutton(
             root, 
             text="Requires Bloodpressure Check", 
+            command=(lambda: self.requires_bloodpressure_check.set(not(self.requires_bloodpressure_check.get())) ),
             variable=self.requires_bloodpressure_check, 
             onvalue=1, 
             offvalue=0
@@ -400,9 +404,16 @@ class MainWindow:
                                 font=("times new Roman", 15, "bold"))
         self.lbl_search.place(x=10, y=10)
 
+        self.lbl = Label(history_frame, text="Are the symptoms mild or severe?", fg="blue",
+                         font=("times new Roman", 12, "bold"))
+        self.mild_severe_case = IntVar()
+        self.lbl.place(x=10, y=50)
+        Radiobutton(history_frame, text="mild", variable=self.mild_severe_case, value=0).place(x=5, y=70)
+        Radiobutton(history_frame, text="severe", variable=self.mild_severe_case, value=1).place(x=80, y=70)
+
         self.lbl = Label(history_frame, text="Is the patient experiencing any of the following symptoms?", fg="blue",
                          font=("times new Roman", 12, "bold"))
-        self.lbl.place(x=10, y=50)
+        self.lbl.place(x=10, y=100)
 
         # RadioButton Variables
         symptoms = get_symptoms()
@@ -411,13 +422,13 @@ class MainWindow:
             self.symptomCheckBoxValues.append(IntVar())
 
         position_x = 10
-        position_y = 90
+        position_y = 123
         for symptom in enumerate(symptoms):
-            self.lbl = Label(history_frame, text=symptom[1]+":", font=("times new Roman", 12))
+            self.lbl = Label(history_frame, text=symptom[1]+":", font=("times new Roman", 10))
             self.lbl.place(x=10, y=position_y)
             Radiobutton(history_frame, text="yes", variable=self.symptomCheckBoxValues[symptom[0]], value=1).place(x=200, y=position_y)
             Radiobutton(history_frame, text="no", variable=self.symptomCheckBoxValues[symptom[0]], value=0).place(x=270, y=position_y)
-            position_y = position_y + 30
+            position_y = position_y + 20
 
         # Blood Pressure
         self.lbl = Label(history_frame, text="Please enter blood pressure reading", fg="blue",
