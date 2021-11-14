@@ -60,8 +60,23 @@ def statistical_information():
     statistics = statistics + "Patients Per Day:\n"
     for day_count in enumerate(patients_per_day()):
         statistics = statistics + "%s: %i\n" % (day_count[1][0],day_count[1][1])
-
+    
+    variants = get_variant_names()
+    mild_case_count = get_mild_case_count()
+    severe_case_count = get_severe_case_count()
+    patient_case_count = get_patient_count()
+    statistics = statistics + "\n"
+    statistics = statistics + "Mild Case Count:     %i  (%s%s)\n" %(mild_case_count, "%", make_percentage(mild_case_count, patient_case_count))
+    statistics = statistics + "Severe Case Count: %i  (%s%s)\n" %(severe_case_count, "%", make_percentage(severe_case_count, patient_case_count))
+    statistics = statistics + "\n\n"
+    statistics = statistics + "Variant Percentages:\n"
+    for variant in variants:
+        statistics = statistics + "\t%s: %i  (%s%s)\n"%(variant, get_variant_count(variant), "%", make_percentage(get_variant_count(variant), patient_case_count))
     return statistics
+
+def make_percentage(numerator, denominator, decimal_places=2):
+    percentage = numerator / denominator * 100
+    return str(("%.{dec}f".format(dec=decimal_places)) % percentage)
 
 def patients_per_day():
     patients = []
@@ -90,7 +105,6 @@ def patients_per_day():
     for d in range(0,len(days)):
         day = datetime.datetime.strptime(days[d],"%Y-%m-%d %H:%M:%S.%f")
         days[d] = day.strftime('%Y-%m-%d')
-
     return list(zip(days,day_count))
 
 def is_same_date(dt1, dt2):
@@ -107,6 +121,56 @@ def get_patient_names():
     for patient in prolog.query("patient(DATE, NAME, AGE, TEMPERATURE, BLOOD_PRESSURE, ILLNESSES, SYMPTOMS, MILD_SEVERE)"):
         names.append(patient["NAME"])
     return names
+
+def get_variant_names():
+    variant_names = []
+    for symptom in prolog.query("stakeholder_symptom(VARIANT, SYMPTOM, WEIGHT, PRESSURE_CHECK)"):
+        if(not(variant_names.count(symptom["VARIANT"]))):
+            variant_names.append(symptom["VARIANT"])
+    if(os.stat("additional_symptoms.pl").st_size):
+        for symptom in prolog.query("additional_symptom(VARIANT, SYMPTOM, WEIGHT, PRESSURE_CHECK)"):
+            if(not(variant_names.count(symptom["VARIANT"]))):
+                variant_names.append(symptom["VARIANT"])
+    return variant_names
+
+def get_patient_count():
+    patient_count = 0
+    for patient in prolog.query("patient(DATE, NAME, AGE, TEMPERATURE, BLOOD_PRESSURE, ILLNESSES, SYMPTOMS, MILD_SEVERE)"):
+        patient_count = patient_count + 1
+    return patient_count
+
+def get_mild_case_count():
+    mild_cases = 0
+    for patient in prolog.query("patient(DATE, NAME, AGE, TEMPERATURE, BLOOD_PRESSURE, ILLNESSES, SYMPTOMS, MILD_SEVERE)"):
+        if(patient["MILD_SEVERE"] == 0):
+            mild_cases = mild_cases + 1
+    return mild_cases
+
+def get_severe_case_count():
+    severe_cases = 0
+    for patient in prolog.query("patient(DATE, NAME, AGE, TEMPERATURE, BLOOD_PRESSURE, ILLNESSES, SYMPTOMS, MILD_SEVERE)"):
+        if(patient["MILD_SEVERE"]):
+            severe_cases = severe_cases + 1
+    return severe_cases
+
+def get_variant_count(variant):
+    patient_names = get_patient_names()
+    symptoms = get_symptoms()
+    variant_names = get_variant_names()
+    variant_count = 0
+    for patient in patient_names:
+        patient_symptoms = []
+        for symptom in symptoms:
+            for symp in prolog.query("is_a_patient_symptom(%s,%s)" %(patient, symptom)):
+                patient_symptoms.append(symptom)
+
+        risks = []
+        for variant_name in variant_names:
+            risks.append(get_risk(variant_name, patient_symptoms))
+
+        if(max(risks) == get_risk(variant, patient_symptoms)):
+            variant_count = variant_count + 1
+    return variant_count
 
 def get_risk(variant,symptoms_array):
     count = 0
