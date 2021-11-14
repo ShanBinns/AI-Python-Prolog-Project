@@ -37,6 +37,69 @@ def get_symptom_weight(symptom_name):
                 return symptom["WEIGHT"]
     return None
 
+def statistical_information():
+    statistics = ""
+    patients = []
+    for p in prolog.query("patient(DATE, NAME, AGE, TEMPERATURE, BLOOD_PRESSURE, ILLNESSES, SYMPTOMS)"):
+        patient = {}
+        patient['DATE'] = p["DATE"]
+        patient['NAME'] = p["NAME"]
+        patient['AGE'] = p["AGE"]
+        patient['TEMPERATURE'] = p["TEMPERATURE"]
+        patient['ILLNESSES'] = p["ILLNESSES"]
+        patient['SYMPTOMS'] = p["SYMPTOMS"]
+        patients.append(patient)
+
+    statistics = statistics + "Patients Per Day:\n"
+    for day_count in enumerate(patients_per_day()):
+        statistics = statistics + "%s: %i\n" % (day_count[1][0],day_count[1][1])
+
+    return statistics
+
+def patients_per_day():
+    patients = []
+    for p in prolog.query("patient(DATE, NAME, AGE, TEMPERATURE, BLOOD_PRESSURE, ILLNESSES, SYMPTOMS)"):
+        patient = {}
+        patient['DATE'] = bytes.decode(p["DATE"])
+        patient['NAME'] = p["NAME"]
+        patient['AGE'] = p["AGE"]
+        patient['TEMPERATURE'] = p["TEMPERATURE"]
+        patient['ILLNESSES'] = p["ILLNESSES"]
+        patient['SYMPTOMS'] = p["SYMPTOMS"]
+        patients.append(patient)
+
+    days = [patients[0]["DATE"]]
+    day_count = [0]
+    for patient in enumerate(patients):
+        print(patient[0],"  ", patient[1])
+    for i in range(0,len(patients)):
+        print(i," of " ,len(patients))
+        if(is_same_date(patients[i]["DATE"], days[len(days) - 1])):
+            day_count[len(days) - 1] = day_count[len(days) - 1] + 1
+        else:
+            days.append(patients[i]["DATE"])
+            day_count.append(1)
+    for d in range(0,len(days)):
+        day = datetime.datetime.strptime(days[d],"%Y-%m-%d %H:%M:%S.%f")
+        days[d] = day.strftime('%Y-%m-%d')
+
+    return list(zip(days,day_count))
+
+def is_same_date(dt1, dt2):
+    datetime1 = datetime.datetime.strptime(dt1,"%Y-%m-%d %H:%M:%S.%f")
+    datetime2 = datetime.datetime.strptime(dt2,"%Y-%m-%d %H:%M:%S.%f")
+    if(datetime1.year == datetime2.year):
+        if(datetime1.month == datetime2.month):
+            if(datetime1.day == datetime2.day):
+                return True
+    return False
+
+def get_patient_names():
+    names = []
+    for patient in prolog.query("patient(DATE, NAME, AGE, TEMPERATURE, BLOOD_PRESSURE, ILLNESSES, SYMPTOMS)"):
+        names.append(patient["NAME"])
+    return names
+
 def get_risk(variant,symptoms_array):
     count = 0
     weight = 0
@@ -244,12 +307,12 @@ class statistics:
         self.stats_data.place(x=20, y=150)
 
         #Reads the stats from the text file, displaying data
-        file = open("files.txt", "r")
-        data = file.read()
+        # file = open("files.txt", "r")
+        # data = file.read()
+        data = "Text"
         self.mild_occurence = data.count("mild")
-        print("The number of patients with mild symptoms is", self.mild_occurence)
 
-        self.stats_data.insert(END, "The number of patients with mild symptoms is", self.mild_occurence)
+        self.stats_data.insert(END, statistical_information(), self.mild_occurence)
 
 
 # Main window
@@ -378,6 +441,10 @@ class MainWindow:
 
     # Function that queries prolog file
     def submit(self):
+        # A Guard that protects the system from entering the same patient twice
+        if(get_patient_names().count(self.name.get())):
+            tkinter.messagebox.showwarning("That Patient already exists"%(self.name.get()), "%s Is Already a Patient in the system"%(self.name.get()))
+            return None
         name = self.name.get()
         age = int(self.age.get())
         temperature = float(self.temp.get())
