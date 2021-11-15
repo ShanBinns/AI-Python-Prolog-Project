@@ -93,10 +93,7 @@ def patients_per_day():
 
     days = [patients[0]["DATE"]]
     day_count = [0]
-    for patient in enumerate(patients):
-        print(patient[0],"  ", patient[1])
     for i in range(0,len(patients)):
-        print(i," of " ,len(patients))
         if(is_same_date(patients[i]["DATE"], days[len(days) - 1])):
             day_count[len(days) - 1] = day_count[len(days) - 1] + 1
         else:
@@ -498,8 +495,8 @@ class MainWindow:
         for symptom in enumerate(symptoms):
             self.lbl = Label(history_frame, text=symptom[1]+":", font=("times new Roman", 10))
             self.lbl.place(x=10, y=position_y)
-            Radiobutton(history_frame, text="yes", variable=self.symptomCheckBoxValues[symptom[0]], value=1).place(x=200, y=position_y)
-            Radiobutton(history_frame, text="no", variable=self.symptomCheckBoxValues[symptom[0]], value=0).place(x=270, y=position_y)
+            Radiobutton(history_frame, text="yes", variable=self.symptomCheckBoxValues[symptom[0]], value=1, command=(lambda: self.decide_if_blood_pressure_should_be_checked() )).place(x=200, y=position_y)
+            Radiobutton(history_frame, text="no", variable=self.symptomCheckBoxValues[symptom[0]], value=0, command=(lambda: self.decide_if_blood_pressure_should_be_checked() )).place(x=270, y=position_y)
             position_y = position_y + 20
 
         # Blood Pressure
@@ -521,7 +518,50 @@ class MainWindow:
         self.submitBtn = Button(root, text="Diagnose Patient", borderwidth=3, relief="sunken", command=self.submit,
                                 width=20, height=2, bg="gold", fg="medium blue", font=("times new Roman", 12, "bold"))
         self.submitBtn.place(x=1090, y=600)
+        self.disable_blood_pressure_check()
+    
+    def should_symptom_cause_blood_pressure_check(self, symptom_name):
+        for symptom in prolog.query("stakeholder_symptom(VARIANT, SYMPTOM, WEIGHT, PRESSURE_CHECK)"):
+            if(symptom["PRESSURE_CHECK"] and symptom["SYMPTOM"] == symptom_name):
+                return True
+        if(os.stat("additional_symptoms.pl").st_size):
+            for symptom in prolog.query("additional_symptom(VARIANT, SYMPTOM, WEIGHT, PRESSURE_CHECK)"):
+                if(symptom["PRESSURE_CHECK"] and symptom["SYMPTOM"] == symptom_name):
+                    return True
+        return False
 
+    def decide_if_blood_pressure_should_be_checked(self):
+        if(self.should_blood_pressure_be_checked()):
+            self.enable_blood_pressure_check()
+            return True
+        else:
+            self.disable_blood_pressure_check()
+            return False
+
+    def should_blood_pressure_be_checked(self):
+        checked_symptoms = self.checked_symptoms()
+        for checked_symptom in checked_symptoms:
+            if(self.should_symptom_cause_blood_pressure_check(checked_symptom)):
+                return True
+        return False
+
+    def checked_symptoms(self):
+        checked_symptoms = []
+        symptoms = get_symptoms()
+        for symptom in enumerate(symptoms):
+            if(self.symptomCheckBoxValues[symptom[0]].get()):
+                checked_symptoms.append(symptoms[symptom[0]])
+        return checked_symptoms
+
+    def enable_blood_pressure_check(self):
+        self.systolic['state'] = 'normal'
+        self.diastolic['state'] = 'normal'
+        return True
+
+    def disable_blood_pressure_check(self):
+        self.systolic['state'] = 'disabled'
+        self.diastolic['state'] = 'disabled'
+        return True
     # Function that queries prolog file
     def submit(self):
 
@@ -535,9 +575,16 @@ class MainWindow:
         age = int(self.age.get())
         temperature = float(self.temp.get())
         
-        systolic_var = int(self.systolic.get())
-        diastolic_var = int(self.diastolic.get())
+        if(self.should_blood_pressure_be_checked()):
+            systolic_var = int(self.systolic.get())
+            diastolic_var = int(self.diastolic.get())
+        else:
+            systolic_var = 0
+            diastolic_var = 0
+        
         bloodpressure = [diastolic_var, systolic_var]
+
+
 
         illnesses = get_illnesses()
         chosen_illnesses = []
