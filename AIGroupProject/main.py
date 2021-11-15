@@ -37,6 +37,10 @@ def get_symptom_weight(symptom_name):
                 return symptom["WEIGHT"]
     return None
 
+def is_low_blood_pressure(systolic, diastolic):
+    if(systolic < 90 or diastolic < 60):
+        return True
+
 def name_to_lowercase_snake_case(name):
     return name.lower().replace(" ","_")
 
@@ -203,7 +207,7 @@ def get_symptoms():
                 symptoms.append(symptom["SYMPTOM"])
     return symptoms
 
-def get_patient_diagnostic(name):
+def get_patient_diagnostic(name, bloodpressure):
     prolog.consult("diagnosis.pl")
     symptoms = get_symptoms()
     diagnostic = ""
@@ -215,7 +219,12 @@ def get_patient_diagnostic(name):
     gen_risk = get_risk('normal',patient_symptoms)
     mu_risk = get_risk('mu',patient_symptoms)
     delta_risk = get_risk('delta',patient_symptoms)
-    diagnostic = "GENERAL VARIANT RISK: %{gen_risk}\nMU VARIANT RISK: %{mu_risk}\nDELTA VARIANT RISK: %{delta_risk}".format(gen_risk=gen_risk,mu_risk=mu_risk,delta_risk=delta_risk)
+
+    has_low_blood_pressure = ""
+    if(is_low_blood_pressure(bloodpressure[0], bloodpressure[1])):
+        has_low_blood_pressure = "The Patient also has low blood pressure"
+
+    diagnostic = "GENERAL VARIANT RISK: %{gen_risk}\nMU VARIANT RISK: %{mu_risk}\nDELTA VARIANT RISK: %{delta_risk}\n\n{low_blood_pressure}".format(gen_risk=gen_risk,mu_risk=mu_risk,delta_risk=delta_risk,low_blood_pressure=has_low_blood_pressure)
     return diagnostic
 
 def get_illnesses():
@@ -568,8 +577,8 @@ class MainWindow:
         # Checking if the patient file has content before reading it
         if(os.stat("patients.pl").st_size):
             # A Guard that protects the system from entering the same patient twice
-            if(get_patient_names().count(self.name.get())):
-                tkinter.messagebox.showwarning("That Patient already exists"%(self.name.get()), "%s Is Already a Patient in the system"%(self.name.get()))
+            if( get_patient_names().count( name_to_lowercase_snake_case(self.name.get()) ) ):
+                tkinter.messagebox.showwarning("That Patient already exists", "%s Is Already a Patient in the system"%(self.name.get()))
                 return None
         name = name_to_lowercase_snake_case(self.name.get())
         age = int(self.age.get())
@@ -600,7 +609,7 @@ class MainWindow:
         
         add_patient_to_file(name, age, temperature, bloodpressure, chosen_illnesses, chosen_symptoms, self.mild_severe_case.get())
         prolog.consult("patients.pl")
-        tkinter.messagebox.showinfo("%s's Diagnosis"%(name_to_titlecase_from_snake_case(name)), str(get_patient_diagnostic(name)))
+        tkinter.messagebox.showinfo("%s's Diagnosis"%(name_to_titlecase_from_snake_case(name)), str(get_patient_diagnostic(name, bloodpressure)))
 
     # functions for add fact buttons
     def add_covid_fact(self):
