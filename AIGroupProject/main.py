@@ -518,8 +518,8 @@ class MainWindow:
         for symptom in enumerate(symptoms):
             self.lbl = Label(history_frame, text=symptom[1]+":", font=("times new Roman", 10))
             self.lbl.place(x=10, y=position_y)
-            Radiobutton(history_frame, text="yes", variable=self.symptomCheckBoxValues[symptom[0]], value=1, command=(lambda: self.decide_if_blood_pressure_should_be_checked() )).place(x=200, y=position_y)
-            Radiobutton(history_frame, text="no", variable=self.symptomCheckBoxValues[symptom[0]], value=0, command=(lambda: self.decide_if_blood_pressure_should_be_checked() )).place(x=270, y=position_y)
+            Radiobutton(history_frame, text="yes", variable=self.symptomCheckBoxValues[symptom[0]], value=1, command=(lambda: self.decide_if_blood_pressure_should_be_checked() )).place(x=280, y=position_y)
+            Radiobutton(history_frame, text="no", variable=self.symptomCheckBoxValues[symptom[0]], value=0, command=(lambda: self.decide_if_blood_pressure_should_be_checked() )).place(x=350, y=position_y)
             position_y = position_y + 20
 
         # Blood Pressure
