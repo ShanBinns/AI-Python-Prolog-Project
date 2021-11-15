@@ -87,29 +87,31 @@ def make_percentage(numerator, denominator, decimal_places=2):
 
 def patients_per_day():
     patients = []
-    for p in prolog.query("patient(DATE, NAME, AGE, TEMPERATURE, BLOOD_PRESSURE, ILLNESSES, SYMPTOMS, MILD_SEVERE)"):
-        patient = {}
-        patient['DATE'] = bytes.decode(p["DATE"])
-        patient['NAME'] = p["NAME"]
-        patient['AGE'] = p["AGE"]
-        patient['TEMPERATURE'] = p["TEMPERATURE"]
-        patient['ILLNESSES'] = p["ILLNESSES"]
-        patient['SYMPTOMS'] = p["SYMPTOMS"]
-        patient['MILD_SEVERE'] = p["MILD_SEVERE"]
-        patients.append(patient)
-
-    days = [patients[0]["DATE"]]
-    day_count = [0]
-    for i in range(0,len(patients)):
-        if(is_same_date(patients[i]["DATE"], days[len(days) - 1])):
-            day_count[len(days) - 1] = day_count[len(days) - 1] + 1
-        else:
-            days.append(patients[i]["DATE"])
-            day_count.append(1)
-    for d in range(0,len(days)):
-        day = datetime.datetime.strptime(days[d],"%Y-%m-%d %H:%M:%S.%f")
-        days[d] = day.strftime('%Y-%m-%d')
-    return list(zip(days,day_count))
+    if(os.stat("patients.pl").st_size):
+        for p in prolog.query("patient(DATE, NAME, AGE, TEMPERATURE, BLOOD_PRESSURE, ILLNESSES, SYMPTOMS, MILD_SEVERE)"):
+            patient = {}
+            patient['DATE'] = bytes.decode(p["DATE"])
+            patient['NAME'] = p["NAME"]
+            patient['AGE'] = p["AGE"]
+            patient['TEMPERATURE'] = p["TEMPERATURE"]
+            patient['ILLNESSES'] = p["ILLNESSES"]
+            patient['SYMPTOMS'] = p["SYMPTOMS"]
+            patient['MILD_SEVERE'] = p["MILD_SEVERE"]
+            patients.append(patient)
+    if(len(patients)):
+        days = [patients[0]["DATE"]]
+        day_count = [0]
+        for i in range(0,len(patients)):
+            if(is_same_date(patients[i]["DATE"], days[len(days) - 1])):
+                day_count[len(days) - 1] = day_count[len(days) - 1] + 1
+            else:
+                days.append(patients[i]["DATE"])
+                day_count.append(1)
+        for d in range(0,len(days)):
+            day = datetime.datetime.strptime(days[d],"%Y-%m-%d %H:%M:%S.%f")
+            days[d] = day.strftime('%Y-%m-%d')
+        return list(zip(days,day_count))
+    return []
 
 def is_same_date(dt1, dt2):
     datetime1 = datetime.datetime.strptime(dt1,"%Y-%m-%d %H:%M:%S.%f")
