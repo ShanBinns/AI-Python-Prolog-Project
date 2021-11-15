@@ -239,6 +239,15 @@ def get_illnesses():
             illnesses.append(illness["ILLNESS"])
     return illnesses
 
+def is_there_a_spike_in_cases():
+    growth_rate = 1.5
+    ppd = patients_per_day()
+    timepoints = len(ppd)
+    if(timepoints >= 3):
+        if( (ppd[timepoints - 1][1] >= (ppd[timepoints - 3][1] * growth_rate)) or (ppd[timepoints - 1][1] >= (ppd[timepoints - 2][1] * growth_rate)) ):
+            return True
+    return False
+
 def add_patient_to_file(name, age, temperature, bloodpressure, illnesses, symptoms, mild_severe):
     patientsProlog = open("patients.pl","a+")
     now = datetime.datetime.now()
@@ -527,6 +536,11 @@ class MainWindow:
         self.lbl2.place(x=10, y=400)
         self.diastolic = Entry(history_frame, bd=3, width=10)
         self.diastolic.place(x=200, y=400)
+
+        if(is_there_a_spike_in_cases()):
+            self.covid_spike_label = Label(root, text="COVID SPIKE PRESENT!", font=("times new Roman", 12))
+            self.covid_spike_label.config(fg="red")
+            self.covid_spike_label.place(x=1090, y=550)
 
         # Submit button
         self.submitBtn = Button(root, text="Diagnose Patient", borderwidth=3, relief="sunken", command=self.submit,
