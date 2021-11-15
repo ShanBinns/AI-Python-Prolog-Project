@@ -37,6 +37,9 @@ def get_symptom_weight(symptom_name):
                 return symptom["WEIGHT"]
     return None
 
+def celcius_to_farenheight(celc):
+    return celc * (9 / 5) + 32
+
 def is_low_blood_pressure(systolic, diastolic):
     if(systolic < 90 or diastolic < 60):
         return True
@@ -207,7 +210,7 @@ def get_symptoms():
                 symptoms.append(symptom["SYMPTOM"])
     return symptoms
 
-def get_patient_diagnostic(name, bloodpressure):
+def get_patient_diagnostic(name, celcius_temperature, bloodpressure):
     prolog.consult("diagnosis.pl")
     symptoms = get_symptoms()
     diagnostic = ""
@@ -223,8 +226,10 @@ def get_patient_diagnostic(name, bloodpressure):
     has_low_blood_pressure = ""
     if(is_low_blood_pressure(bloodpressure[0], bloodpressure[1])):
         has_low_blood_pressure = "The Patient also has low blood pressure"
+    
+    farenheight = "The Temperature in Farenheight is: %.2f deg" % (celcius_to_farenheight(celcius_temperature))
 
-    diagnostic = "GENERAL VARIANT RISK: %{gen_risk}\nMU VARIANT RISK: %{mu_risk}\nDELTA VARIANT RISK: %{delta_risk}\n\n{low_blood_pressure}".format(gen_risk=gen_risk,mu_risk=mu_risk,delta_risk=delta_risk,low_blood_pressure=has_low_blood_pressure)
+    diagnostic = "GENERAL VARIANT RISK: %{gen_risk}\nMU VARIANT RISK: %{mu_risk}\nDELTA VARIANT RISK: %{delta_risk}\n\n{farenheight}\n\n{low_blood_pressure}".format(gen_risk=gen_risk,mu_risk=mu_risk,delta_risk=delta_risk,low_blood_pressure=has_low_blood_pressure,farenheight=farenheight)
     return diagnostic
 
 def get_illnesses():
@@ -450,7 +455,7 @@ class MainWindow:
         self.age = Entry(detail_frame, bd=3, width=10)
         self.age.place(x=200, y=90)
 
-        self.lbl3 = Label(detail_frame, text=" Temperature (in degrees):", font=("times new Roman", 12))
+        self.lbl3 = Label(detail_frame, text=" Temperature (in Celcius):", font=("times new Roman", 12))
         self.lbl3.place(x=10, y=130)
         self.temp = Entry(detail_frame, bd=3, width=10)
         self.temp.place(x=200, y=130)
@@ -609,7 +614,7 @@ class MainWindow:
         
         add_patient_to_file(name, age, temperature, bloodpressure, chosen_illnesses, chosen_symptoms, self.mild_severe_case.get())
         prolog.consult("patients.pl")
-        tkinter.messagebox.showinfo("%s's Diagnosis"%(name_to_titlecase_from_snake_case(name)), str(get_patient_diagnostic(name, bloodpressure)))
+        tkinter.messagebox.showinfo("%s's Diagnosis"%(name_to_titlecase_from_snake_case(name)), str(get_patient_diagnostic(name, temperature, bloodpressure)))
 
     # functions for add fact buttons
     def add_covid_fact(self):
