@@ -212,13 +212,27 @@ def get_symptoms():
                 symptoms.append(symptom["SYMPTOM"])
     return symptoms
 
-def get_patient_diagnostic(name, celcius_temperature, bloodpressure):
+def get_patient_symptoms(name):
+    symptoms = get_symptoms()
+    patient_symptoms = []
+    for symptom in symptoms:
+        for symp in prolog.query("is_a_patient_symptom(%s,%s)" %(name_to_lowercase_snake_case(name), symptom)):
+            patient_symptoms.append(symptom)
+    return patient_symptoms
+
+def is_symptomatic(name):
+    if(len(get_patient_symptoms(name))):
+        return True
+    return False
+
+def get_patient_diagnosis(name, celcius_temperature, bloodpressure, age, mild_severe):
     prolog.consult("diagnosis.pl")
+    prolog.consult("patients.pl")
     symptoms = get_symptoms()
     diagnostic = ""
     patient_symptoms = []
     for symptom in symptoms:
-        for symp in prolog.query("is_a_patient_symptom(%s,%s)" %(name, symptom)):
+        for symp in prolog.query("is_a_patient_symptom(%s,%s)" %(name_to_lowercase_snake_case(name), symptom)):
             patient_symptoms.append(symptom)
 
     gen_risk = get_risk('normal',patient_symptoms)
@@ -231,8 +245,44 @@ def get_patient_diagnostic(name, celcius_temperature, bloodpressure):
     
     farenheight = "The Temperature in Farenheight is: %.2f deg" % (celcius_to_farenheight(celcius_temperature))
 
-    diagnostic = "GENERAL VARIANT RISK: %{gen_risk}\nMU VARIANT RISK: %{mu_risk}\nDELTA VARIANT RISK: %{delta_risk}\n\n{farenheight}\n\n{low_blood_pressure}".format(gen_risk=gen_risk,mu_risk=mu_risk,delta_risk=delta_risk,low_blood_pressure=has_low_blood_pressure,farenheight=farenheight)
+    diagnostic = "GENERAL VARIANT RISK: %{gen_risk}\nMU VARIANT RISK: %{mu_risk}\nDELTA VARIANT RISK: %{delta_risk}\n\n{farenheight}\n\n{low_blood_pressure}\n".format(gen_risk=gen_risk,mu_risk=mu_risk,delta_risk=delta_risk,low_blood_pressure=has_low_blood_pressure,farenheight=farenheight)
+
+    # Short and Long Term Reccomendation Determination
+    short_term_reccomendations = "\nShort Term Reccomendations:\n"
+    long_term_reccomendations = "\nLong Term Reccomendations:\n"
+    
+    if(celcius_to_farenheight(celcius_temperature) >= 100):
+        short_term_reccomendations = short_term_reccomendations + "Patient's body temperature is over the usual persons body temperature, take that into accout when deciding on treatment.\n"
+
+    if(age > 40):
+        long_term_reccomendations = long_term_reccomendations + "Patient is over 40 and is more likely to be hospitalized or die.\n"
+
+    if(float(gen_risk) > 40.0 or float(mu_risk) > 40.0 or float(delta_risk) > 40.0):
+        short_term_reccomendations = short_term_reccomendations + "Patient must be advised to get fully vaccinated, and practice social distancing.\n"
+
+    if(mild_severe):
+        long_term_reccomendations = long_term_reccomendations + "Patient has severe symptoms and will likely need hospitalization.\n"
+    else:
+        short_term_reccomendations = short_term_reccomendations + "Patient has mild symptoms and will likely only need to self-isolate.\n"
+
+    if(is_symptomatic(name)):
+        short_term_reccomendations = short_term_reccomendations + "Patient is symptomatic and should and isolate until symptoms subside.\n"
+        long_term_reccomendations = long_term_reccomendations + "Patient must be adviced to stay intouch with their doctor and to monitor their symptoms.\n"
+        long_term_reccomendations = long_term_reccomendations + "Patient should practice social distancing.\n"
+
+    symptom_limit = 4
+    if(len(get_patient_symptoms(name)) > symptom_limit):
+        short_term_reccomendations = short_term_reccomendations + "Patient has over "+ str(symptom_limit) +" symptoms. They should take a Covid test now!\n"
+    
+    if(is_ill(name)):
+        long_term_reccomendations = long_term_reccomendations + "Patients with underlying illnesses are at greater risk of hospitalization from COVID-19 and must get extra advisement from a medical practioner.\n"
+
+    if(is_low_blood_pressure(bloodpressure[0], bloodpressure[1])):
+       long_term_reccomendations = long_term_reccomendations + "Patient should be advised to get regular blood pressure checks.\n" 
+
+    diagnostic = diagnostic + short_term_reccomendations + long_term_reccomendations
     return diagnostic
+
 
 def get_illnesses():
     illnesses = []
@@ -240,6 +290,20 @@ def get_illnesses():
         if(not(illnesses.count(illness["ILLNESS"]))):
             illnesses.append(illness["ILLNESS"])
     return illnesses
+
+def get_patient_illnesses(name):
+    illnesses = get_illnesses()
+    patient_illnesses = []
+    for illness in illnesses:
+        for ill in prolog.query("is_a_patient_illness(%s,%s)" %(name_to_lowercase_snake_case(name), illness)):
+            patient_illnesses.append(illness)
+    return patient_illnesses
+
+def is_ill(name):
+    print(get_patient_illnesses(name))
+    if(len(get_patient_illnesses(name))):
+        return True
+    return False
 
 def is_there_a_spike_in_cases():
     growth_rate = 1.5
@@ -630,7 +694,7 @@ class MainWindow:
         
         add_patient_to_file(name, age, temperature, bloodpressure, chosen_illnesses, chosen_symptoms, self.mild_severe_case.get())
         prolog.consult("patients.pl")
-        tkinter.messagebox.showinfo("%s's Diagnosis"%(name_to_titlecase_from_snake_case(name)), str(get_patient_diagnostic(name, temperature, bloodpressure)))
+        tkinter.messagebox.showinfo("%s's Diagnosis"%(name_to_titlecase_from_snake_case(name)), str(get_patient_diagnosis(name, temperature, bloodpressure, age, self.mild_severe_case.get())))
 
     # functions for add fact buttons
     def add_covid_fact(self):

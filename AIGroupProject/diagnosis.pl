@@ -9,6 +9,12 @@ is_a_patient_symptom(PATIENT,SYMPTOM) :-
 	symptoms_of_patient(PATIENT,SYMPTOMS),
 	list_member(SYMPTOM, SYMPTOMS).
 
+illnesses_of_patient(PATIENT,ILLNESSES) :-
+	patient(_, PATIENT, _, _, _, ILLNESSES, _, _).
+
+is_a_patient_illness(PATIENT,ILLNESS) :-
+	illnesses_of_patient(PATIENT,ILLNESSES),
+	list_member(ILLNESS, ILLNESSES).
 
 get_symptom(Name,Temp,Age,Dizziness,Fainting,Vision,Coughing,Short_Breath,History,Systolic,Diastolic):-
 
